@@ -69,3 +69,9 @@ export interface MetricsData {
     repoHealthScore: number;
     competitionLevel: string;
 }
+
+export interface User {
+    authenticated: boolean;
+    plan?: "free" | "pro";
+    aiUsageToday?: number;
+}

@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import type { User } from "../types";
 
 interface AuthContextType {
-    isAuthenticated: boolean;
+    user: User | null;
     isLoading: boolean;
     logout: () => Promise<void>;
 }
@@ -10,7 +11,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const API_URL = import.meta.env.VITE_BACKEND_URL;
@@ -24,8 +25,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (urlToken) {
             localStorage.setItem("github_token", urlToken);
             window.history.replaceState({}, document.title, window.location.pathname);
-            setIsAuthenticated(true);
-            setIsLoading(false);
+            // Note: We bypass storing the `user` immediately here because we need the backend to give us
+            // their exact plan tier. The subsequent `checkAuth` call will fetch and populate it natively.
+            setIsLoading(true);
             return;
         }
 
@@ -33,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const token = localStorage.getItem("github_token");
             if (!token) {
                 if (mounted) {
-                    setIsAuthenticated(false);
+                    setUser(null);
                     setIsLoading(false);
                 }
                 return;
@@ -46,18 +48,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     }
                 });
                 if (res.ok) {
-                    const data = await res.json();
+                    const data = await res.json() as User;
                     if (mounted) {
-                        setIsAuthenticated(!!data.authenticated);
+                        if (data.authenticated) {
+                            setUser(data);
+                        } else {
+                            setUser(null);
+                        }
                     }
                 } else {
                     localStorage.removeItem("github_token");
-                    if (mounted) setIsAuthenticated(false);
+                    if (mounted) setUser(null);
                 }
             } catch (error) {
                 console.error("Auth check failed:", error);
                 localStorage.removeItem("github_token");
-                if (mounted) setIsAuthenticated(false);
+                if (mounted) setUser(null);
             } finally {
                 if (mounted) {
                     setIsLoading(false);
@@ -87,12 +93,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error("Logout failed:", error);
         } finally {
             localStorage.removeItem("github_token");
-            setIsAuthenticated(false);
+            setUser(null);
         }
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, isLoading, logout }}>
+        <AuthContext.Provider value={{ user, isLoading, logout }}>
             {children}
         </AuthContext.Provider>
     );
