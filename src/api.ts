@@ -1,11 +1,12 @@
 import type { AnalyzeResponse, ExecutionPack, IssueData, RepoData, MetricsData } from "./types";
 
 export async function analyzeRepo(repoUrl: string): Promise<AnalyzeResponse> {
+    const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     const token = localStorage.getItem("github_token");
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    const res = await fetch("/analyze", {
+    const res = await fetch(`${API_URL}/analyze`, {
         method: "POST",
         headers,
         body: JSON.stringify({ repoUrl }),
@@ -24,11 +25,12 @@ export async function analyzeExecution(
     repoData: RepoData,
     metrics: MetricsData
 ): Promise<ExecutionPack> {
+    const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     const token = localStorage.getItem("github_token");
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    const res = await fetch("/analyze-execution", {
+    const res = await fetch(`${API_URL}/analyze-execution`, {
         method: "POST",
         headers,
         body: JSON.stringify({ issueData, repoData, metrics }),
