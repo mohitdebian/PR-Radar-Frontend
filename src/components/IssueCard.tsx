@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { ScoredIssue, Classification } from "../types";
+import type { ScoredIssue } from "../types";
 
 interface Props {
     issue: ScoredIssue;
