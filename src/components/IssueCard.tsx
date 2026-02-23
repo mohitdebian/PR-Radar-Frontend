@@ -8,7 +8,7 @@ interface Props {
 }
 
 const classificationConfig: Record<
-    Classification,
+    string,
     { label: string; color: string; bg: string; border: string; glow: string }
 > = {
     HIGH_MERGE_PROBABILITY: {
@@ -35,7 +35,13 @@ const classificationConfig: Record<
 };
 
 export default function IssueCard({ issue, repo, index }: Props) {
-    const config = classificationConfig[issue.classification];
+    const config = classificationConfig[issue.classification] || {
+        label: issue.classification.replace(/_/g, " "),
+        color: "text-slate-400",
+        bg: "bg-surface-700/50",
+        border: "border-surface-600/30",
+        glow: "shadow-none",
+    };
     const topReasons = issue.reasons.slice(0, 3);
     const [owner, name] = repo.split("/");
 
