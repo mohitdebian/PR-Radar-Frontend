@@ -1,9 +1,13 @@
 import type { AnalyzeResponse, ExecutionPack, IssueData, RepoData, MetricsData } from "./types";
 
 export async function analyzeRepo(repoUrl: string): Promise<AnalyzeResponse> {
+    const token = localStorage.getItem("github_token");
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
     const res = await fetch("/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ repoUrl }),
     });
 
@@ -20,9 +24,13 @@ export async function analyzeExecution(
     repoData: RepoData,
     metrics: MetricsData
 ): Promise<ExecutionPack> {
+    const token = localStorage.getItem("github_token");
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
     const res = await fetch("/analyze-execution", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ issueData, repoData, metrics }),
     });
 

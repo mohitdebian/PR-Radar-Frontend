@@ -18,19 +18,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         let mounted = true;
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get("token");
+
+        if (urlToken) {
+            localStorage.setItem("github_token", urlToken);
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setIsAuthenticated(true);
+            setIsLoading(false);
+            return;
+        }
+
         async function checkAuth() {
+            const token = localStorage.getItem("github_token");
+            if (!token) {
+                if (mounted) {
+                    setIsAuthenticated(false);
+                    setIsLoading(false);
+                }
+                return;
+            }
+
             try {
                 const res = await fetch(`${API_URL}/auth/user`, {
-                    credentials: "include", // Important: rely on HTTP-only cookie
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
                 });
                 if (res.ok) {
                     const data = await res.json();
                     if (mounted) {
                         setIsAuthenticated(!!data.authenticated);
                     }
+                } else {
+                    localStorage.removeItem("github_token");
+                    if (mounted) setIsAuthenticated(false);
                 }
             } catch (error) {
                 console.error("Auth check failed:", error);
+                localStorage.removeItem("github_token");
+                if (mounted) setIsAuthenticated(false);
             } finally {
                 if (mounted) {
                     setIsLoading(false);
@@ -43,17 +70,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [API_URL]);
 
     const logout = async () => {
         try {
-            await fetch(`${API_URL}/auth/logout`, {
-                method: "POST",
-                credentials: "include",
-            });
-            setIsAuthenticated(false);
+            const token = localStorage.getItem("github_token");
+            if (token) {
+                await fetch(`${API_URL}/auth/logout`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+            }
         } catch (error) {
             console.error("Logout failed:", error);
+        } finally {
+            localStorage.removeItem("github_token");
+            setIsAuthenticated(false);
         }
     };
 
