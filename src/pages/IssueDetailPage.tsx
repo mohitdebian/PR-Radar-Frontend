@@ -4,7 +4,6 @@ import type { ExecutionPack } from "../types";
 import { analyzeExecution } from "../api";
 import { useScan } from "../context/ScanContext";
 import Markdown from "react-markdown";
-import PricingModal from "../components/PricingModal";
 
 export default function IssueDetailPage() {
     const { owner, repo, number } = useParams();
@@ -105,30 +104,13 @@ export default function IssueDetailPage() {
                                 Return home to scan
                             </Link>
                         )}
-                        {error.includes("limit reached") && (
-                            <button onClick={() => window.dispatchEvent(new CustomEvent('open-pricing'))} className="mt-4 ml-4 inline-block font-bold text-white bg-accent px-4 py-1.5 rounded-lg hover:bg-accent-bright transition-colors">
-                                View Plans
-                            </button>
-                        )}
                     </div>
                 )}
 
                 {analysis && <AnalysisContent analysis={analysis} repo={`${owner}/${repo}`} issueNumber={Number(number)} issueMatch={issueMatch} />}
             </div>
-
-            <PricingModalWrapper />
         </div>
     );
-}
-
-function PricingModalWrapper() {
-    const [isOpen, setIsOpen] = useState(false);
-    useEffect(() => {
-        const handler = () => setIsOpen(true);
-        window.addEventListener('open-pricing', handler);
-        return () => window.removeEventListener('open-pricing', handler);
-    }, []);
-    return <PricingModal isOpen={isOpen} onClose={() => setIsOpen(false)} defaultErrorMessage="You've reached your free daily limit for AI-powered issue analysis." />;
 }
 
 function LoadingState() {
